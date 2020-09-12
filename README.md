@@ -1,3 +1,22 @@
+# Aim of this NanoJ-Fluidics fork
+
+First, I would like to extend Nano-J Fluidics (NJF) for our own Multi-Modal Imaging experiments, some of which require both pumps and valves. This should be relatively easy to achieve.
+
+Way down the line, I see NJF as a viable solution to using Micro-Manager to control High-Content Screening (HCS) systems that combine microscopy and fluidics (such as the BDPathway 855 or the Cellomics ArrayScan). For now, there is the [HCS Site Generator](https://micro-manager.org/wiki/HCS_Site_Generator) plugin for multiwell plate imaging, but no plugin for liquid dispensing.
+
+## What do I plan to do?
+
+These steps (I think) will let me write NJF protocols that interact with pumps and valves, and then later, let me use NJF with pumps and valves registered as Micro-Manager devices through the Harware Configuration Wizard.
+
+- [ ] Add the concept of valves (TODO refactor Pump to be called fluidicsDevice first)
+- [ ] Support multiple devices or hubs in NJF
+- [ ] Decouple pump devices defined in NJF and add them to Micro-Manager as a new type of base class fluidics device (sort of like a z-stage + current, max and dead (?) volume).
+- [ ] Create some demo Micro-Manager device adapters as a proof of concept
+- [ ] Create a Hamilton pump device adapter, possibly for the [Microlab 500 manual](https://www.microlabtech.co.uk/documents/literature/ML%20500%20B-C%20Manual.pdf) using Protocol 1/RNO+
+- [ ] Extend the existing [Hamilton MVP](https://github.com/micro-manager/micro-manager/tree/master/DeviceAdapters/HamiltonMVP) device adapter (which also uses Protocol 1/RNO+) to control daisy chains of both valves and *pumps* (up to 16 individual elements)
+- [ ] Add wrapper functions in the JAVA / Python SWIG interfaces to access the fluidics devices from JAVA/Python/Beanshell with simplified commands
+- [ ] Update NanoJ Fluidics to use these commands
+
 # NanoJ-Fluidics: open-source fluid exchange in microscopy
 
 Note: visit the [**Wiki**][10] or [**Forum**][12] for latest updates.
