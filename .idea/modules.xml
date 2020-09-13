@@ -3,11 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/NanoJ-Fluidics.iml" filepath="$PROJECT_DIR$/NanoJ-Fluidics.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Pumps/pumpControl.harvardElite/pumpControl.harvardElite.iml" filepath="$PROJECT_DIR$/Pumps/pumpControl.harvardElite/pumpControl.harvardElite.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Pumps/pumpControl.stepperControl/pumpControl.stepperControl.iml" filepath="$PROJECT_DIR$/Pumps/pumpControl.stepperControl/pumpControl.stepperControl.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Applications/pumpControl_IJ/pumpControl_IJ.iml" filepath="$PROJECT_DIR$/Applications/pumpControl_IJ/pumpControl_IJ.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Applications/pumpControl_MM/pumpControl_MM.iml" filepath="$PROJECT_DIR$/Applications/pumpControl_MM/pumpControl_MM.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Applications/pumpControl_SA/pumpControl_SA.iml" filepath="$PROJECT_DIR$/Applications/pumpControl_SA/pumpControl_SA.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Devices/deviceControl.harvardElite/deviceControl.harvardElite.iml" filepath="$PROJECT_DIR$/Devices/deviceControl.harvardElite/deviceControl.harvardElite.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Devices/deviceControl.stepperControl/deviceControl.stepperControl.iml" filepath="$PROJECT_DIR$/Devices/deviceControl.stepperControl/deviceControl.stepperControl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Applications/deviceControl_IJ/deviceControl_IJ.iml" filepath="$PROJECT_DIR$/Applications/deviceControl_IJ/deviceControl_IJ.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Applications/deviceControl_MM/deviceControl_MM.iml" filepath="$PROJECT_DIR$/Applications/deviceControl_MM/deviceControl_MM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Applications/deviceControl_SA/deviceControl_SA.iml" filepath="$PROJECT_DIR$/Applications/deviceControl_SA/deviceControl_SA.iml" />
     </modules>
   </component>
 </project>

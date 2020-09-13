@@ -3,7 +3,7 @@
     <output-path>$PROJECT_DIR$</output-path>
     <root id="archive" name="NanoJ-Fluidics_MM.jar">
       <element id="module-output" name="NanoJ-Fluidics" />
-      <element id="module-output" name="pumpControl_MM" />
+      <element id="module-output" name="deviceControl_MM" />
     </root>
   </artifact>
 </component>

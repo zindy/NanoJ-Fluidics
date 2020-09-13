@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="deviceControl.harvardElite">
+    <output-path>$PROJECT_DIR$/DevicePlugins</output-path>
+    <root id="archive" name="deviceControl.harvardElite.jar">
+      <element id="module-output" name="deviceControl.harvardElite" />
+      <element id="directory" name="META-INF">
+        <element id="dir-copy" path="$PROJECT_DIR$/Devices/deviceControl.harvardElite/META-INF" />
+      </element>
+    </root>
+  </artifact>
+</component>

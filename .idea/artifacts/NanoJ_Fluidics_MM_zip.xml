@@ -14,8 +14,8 @@
         </element>
         <element id="directory" name="mmplugins">
           <element id="artifact" artifact-name="NanoJ-Fluidics_MM" />
-          <element id="directory" name="PumpPlugins">
-            <element id="artifact" artifact-name="pumpControl.harvardElite" />
+          <element id="directory" name="DevicePlugins">
+            <element id="artifact" artifact-name="deviceControl.harvardElite" />
           </element>
         </element>
       </element>

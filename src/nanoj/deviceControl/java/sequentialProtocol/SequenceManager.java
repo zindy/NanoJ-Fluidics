@@ -1,0 +1,263 @@
+package nanoj.deviceControl.java.sequentialProtocol;
+
+import ij.IJ;
+import nanoj.deviceControl.java.devices.DeviceManager;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class SequenceManager extends Observable implements Runnable {
+    public static final String NEW_STEP_STARTED = "New step started.";
+    public static final String MONKEY_CHANGED = "Monkey status changed.";
+    public static final String SYRINGE_STATUS_CHANGED = "Syringe status changed.";
+    public static final String WAITING_MESSAGE = "Waiting.";
+    public static final String SEQUENCE_FINISHED = "Sequence Finished.";
+    public static final String SEQUENCE_STOPPED = "Sequence Stopped.";
+    public static final String SYRINGE_READY = "Syringe is marked as ready.";
+    public static final String SYRINGE_NOT_READY = "Syringe is not marked as ready.";
+
+    public final static SequenceManager INSTANCE = new SequenceManager();
+
+    // Foreign objects
+    private DeviceManager deviceManager = DeviceManager.INSTANCE;
+
+    private SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+
+    private boolean monkeyReady = true;
+    private Sequence sequence;
+    private float suckDuration;
+    private int startStep = 0;
+    private int endStep = 0;
+    private int currentDevice = 0;
+    private int currentStep = -1;
+    private boolean started = false;
+    private boolean alive = true;
+    private boolean syringeExchangeNeeded = false;
+
+    private String waitingMessage = "Sequence not yet started.";
+
+    private SequenceManager() {
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+
+    @Override
+    public void run(){
+        while (alive) {
+            if (started) {
+                for (currentStep = startStep; currentStep < endStep; currentStep++) {
+                    if (!started) break;
+
+                    Step step = sequence.get(currentStep);
+
+                    //Tell suck device to start
+                    if (sequence.isSuckTrue() && step.suckBefore()) {
+                        suckDuration = sequence.getSuckStep().getDuration();
+                        try {
+                            currentDevice = sequence.getSuckStep().getSelectedDevice();
+
+                            deviceManager.startPumping(
+                                    currentDevice,
+                                    sequence.getSuckStep().getSyringeIndex(),
+                                    sequence.getSuckStep().getFlowRate(),
+                                    sequence.getSuckStep().getTargetVolume(),
+                                    sequence.getSuckStep().getAction()
+                            );
+
+                            setChanged();
+                            notifyObservers(NEW_STEP_STARTED);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else suckDuration = 0;
+
+                    suckDuration *= 1000;
+
+                    long startTime = System.currentTimeMillis();
+
+                    while ((System.currentTimeMillis() - startTime) < suckDuration) {
+                        //Stop sequence if the "Stop" button was pressed.
+                        if (!started) break;
+
+                        //Calculate how much time there is still to go in seconds.
+                        float timeToGo = (suckDuration - (float) (System.currentTimeMillis() - startTime));
+
+                        String formattedTime = format.format(new Date((long) timeToGo));
+
+                        if (timeToGo > 60000)
+                            setWaitingMessage("Withdrawal step. Waiting for: " + formattedTime);
+                        else
+                            setWaitingMessage("Withdrawal step. Waiting for: " +
+                                    Math.round(timeToGo/1000) + " seconds");
+
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    try {
+                        currentDevice = step.getSelectedDevice();
+                        deviceManager.startPumping(
+                                currentDevice,
+                                step.getSyringeIndex(),
+                                step.getFlowRate(),
+                                step.getTargetVolume(),
+                                step.getAction()
+                        );
+
+                        setChanged();
+                        notifyObservers(NEW_STEP_STARTED);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    startTime = System.currentTimeMillis();
+
+                    // If this isn't the last step, then set the "syringe ready" status to false. This makes
+                    // the sequence wait until the user has confirmed the syringe exchange.
+                    if (currentStep < endStep) setMonkeyReady(false);
+                        // If it IS the last step, then we can stop now.
+                    else {
+                        stop();
+                        setWaitingMessage("Sequence finished.");
+                        break;
+                    }
+
+                    if (currentStep < endStep-1)
+                        syringeExchangeNeeded = sequence.get(currentStep+1).isSyringeExchangeRequired();
+
+                    setChanged();
+                    notifyObservers(SYRINGE_STATUS_CHANGED);
+
+                    // While the time between steps hasn't passed OR the syringe hasn't been readied...
+                    while ( (System.currentTimeMillis() - startTime) < step.getDuration()*1000 ||
+                            !monkeyReady && syringeExchangeNeeded) {
+                        //Stop sequence if the "Stop" button was pressed.
+                        if (!started) break;
+
+                        //Calculate how much time there is still to go in seconds.
+                        float timeToGo = (step.getDuration()*1000 - (float) (System.currentTimeMillis() - startTime));
+
+                        String formattedTime = format.format(new Date((long) timeToGo));
+
+                        timeToGo /= 1000;
+                        timeToGo = Math.round(timeToGo);
+
+                        // This and the next "else if" let you know how long the device has been waiting for the syringe
+                        //  in minutes after the first minute waiting for the syringe ready signal
+                        if (timeToGo < -60) setWaitingMessage("Step: " + step.getNumber() + ", "
+                                + step.getName() + ". Waiting for syringe for " + formattedTime);
+                            //  but before that it's in seconds.
+                        else if (timeToGo < 0) setWaitingMessage("Step: " + step.getNumber() + ", "
+                                + step.getName() + ". Waiting for syringe for the past " + -timeToGo + " seconds.");
+                            //  And before that it's seconds to set duration
+                        else if (timeToGo < 60) setWaitingMessage("Step: " + step.getNumber() + ", "
+                                + step.getName() + ". Waiting for: " + timeToGo + " seconds.");
+                            //  and before that it's minutes to set duration
+                        else if (timeToGo >= 60) setWaitingMessage("Step: " + step.getNumber() + ", "
+                                + step.getName() + ". Waiting for: " + formattedTime);
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                currentStep = -1;
+                endStep = 0;
+                started = false;
+                setChanged();
+                notifyObservers(SEQUENCE_FINISHED);
+            }
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public synchronized void start(Sequence givenSteps) {
+        this.sequence = givenSteps;
+        isSyringeExchangeRequiredOnSequence();
+        startStep = 0;
+        endStep = givenSteps.size();
+        started = true;
+    }
+
+    public synchronized void start(Sequence givenSteps, int start, int end) {
+        this.sequence = givenSteps;
+        isSyringeExchangeRequiredOnSequence();
+
+        start = (start < 0) ? 0 : start;
+        end = (end > givenSteps.size()) ? givenSteps.size() : end;
+
+        startStep = start;
+        endStep = end;
+        started = true;
+    }
+
+    public void isSyringeExchangeRequiredOnSequence() {
+        syringeExchangeNeeded = false;
+        for (Step step: sequence) {
+            if (step.isSyringeExchangeRequired()) {
+                syringeExchangeNeeded = true;
+                break;
+            }
+        }
+
+        setChanged();
+        notifyObservers(SYRINGE_STATUS_CHANGED);
+    }
+
+    public synchronized void stop() {
+        started = false;
+        setChanged();
+        notifyObservers(SEQUENCE_STOPPED);
+    }
+
+    public synchronized void setMonkeyReady(boolean state) {
+        monkeyReady = state;
+        setChanged();
+        notifyObservers(MONKEY_CHANGED);
+    }
+
+    public synchronized boolean toggleMonkeyReady() {
+        monkeyReady = !monkeyReady;
+        setChanged();
+        notifyObservers(MONKEY_CHANGED);
+        return monkeyReady;
+    }
+
+    private synchronized void setWaitingMessage(String newStatus) {
+        waitingMessage = newStatus;
+        setChanged();
+        notifyObservers(WAITING_MESSAGE);
+    }
+
+    public synchronized boolean isSyringeExchangeNeeded() { return syringeExchangeNeeded; }
+
+    public synchronized boolean isStarted() { return started; }
+
+    public synchronized String getWaitingMessage() {
+        return waitingMessage;
+    }
+
+    public synchronized String getMonkeyStatus() {
+        if (monkeyReady) return SYRINGE_READY;
+        else return SYRINGE_NOT_READY;
+    }
+
+    public int getCurrentDevice() {
+        if (started) {
+            return currentDevice;
+        } else return -1;
+    }
+
+    public int getCurrentStep() {
+        return currentStep;
+    }
+
+    public void defineSequence(Sequence givenSteps) { sequence = givenSteps; }
+}
